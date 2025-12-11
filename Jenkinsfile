@@ -1,7 +1,7 @@
 pipeline {
     agent any
     options {
-        // Force a new workspace each build
+    // Force a new workspace each build
         skipDefaultCheckout()
     }
     environment {
