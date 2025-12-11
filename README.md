@@ -14,7 +14,7 @@
 - You can __register__ by clicking on top-right
 
 
-# Dockerizing Booking Laravel Project
+## How to run this project inside containers using Docker & Docker-Compose :
 
 A simple booking application built with **Laravel 8**, **MySQL**, **Docker**, and **Nginx**.
 
