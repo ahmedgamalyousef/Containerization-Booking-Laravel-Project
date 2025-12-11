@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    options {
+        // Force a new workspace each build
+        skipDefaultCheckout()
+    }
     environment {
         COMPOSE_PROJECT_NAME = 'booking-laravel'
         MYSQL_ROOT_PASSWORD = 'rootpass'
