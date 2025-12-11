@@ -1,142 +1,148 @@
-# Booking System with Laravel 8 and Material Dashboard
+# Containerization Booking Laravel Project
 
-## How to run this project locally : 
+This project is a Laravel booking application. This README explains how to run it **locally**, with **Docker & Docker Compose**, and how to set up a **Jenkins pipeline**.
 
-- Clone the repository with __git clone__
-- Copy __.env.example__ file to __.env__
-- Edit database credentials in __.env__
-- Run __composer install__
-- Run __php artisan key:generate__
-- Run __php artisan migrate --seed__
-- Run __npm install__
-- Run __npm run dev__
-- Run __php artisan serve__ (if you want to use other port add __--port=90__)
-- You can __register__ by clicking on top-right
+---
 
+## 1. Running Locally (Without Docker)
 
-## How to run this project inside containers using Docker & Docker-Compose :
-
-A simple booking application built with **Laravel 8**, **MySQL**, **Docker**, and **Nginx**.
-
-## Table of Contents
-- [Project Setup](#project-setup)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Running the Project](#running-the-project)
-- [Database Setup](#database-setup)
-- [Seeding](#seeding)
-- [Usage](#usage)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-
-
-
-## Project Setup
-
-This project uses Docker to run Laravel, MySQL, and Nginx. It also supports environment configuration and database seeding .
-
-
-## Requirements
-
-- Docker   
-- Docker Compose  
+### Prerequisites
+- PHP >= 7.4
+- Composer
+- MySQL
+- Node.js & NPM (for frontend assets)
 - Git
-- Nginx
-- MYSQL
-  
 
+### Steps
 
-## Installation
-
-1. Clone the repository:
-
+1. **Clone the repository**
 ```bash
-git clone https://github.com/ahmedgamalyousef/Dockerizing-Booking-Laravel-Project.git
-cd Dockerizing-Booking-Laravel-Project
+git clone https://github.com/ahmedgamalyousef/Containerization-Booking-Laravel-Project.git
+cd Containerization-Booking-Laravel-Project
 ```
 
-2. Copy the environment file:
+2. **Install Composer dependencies**
+```bash
+composer install
+```
 
+3. **Copy .env file**
 ```bash
 cp .env.example .env
 ```
 
-3. Build Docker images:
+4. **Set database credentials in `.env`**
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=booking
+DB_USERNAME=bookinguser
+DB_PASSWORD=Booking@1234
+```
 
+5. **Generate application key**
+```bash
+php artisan key:generate
+```
+
+6. **Run migrations & seed database**
+```bash
+php artisan migrate --seed
+```
+
+7. **Set permissions**
+```bash
+chmod -R 775 storage bootstrap/cache
+```
+
+8. **Run Laravel server**
+```bash
+php artisan serve
+```
+Access the app at: `http://127.0.0.1:8000`
+
+---
+
+## 2. Running With Docker & Docker Compose
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Steps
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/ahmedgamalyousef/Containerization-Booking-Laravel-Project.git
+cd Containerization-Booking-Laravel-Project
+```
+
+2. **Create `.env` file**
+```bash
+cp .env.example .env
+```
+
+3. **Update database credentials in `.env`**
+```env
+DB_HOST=db
+DB_DATABASE=booking
+DB_USERNAME=bookinguser
+DB_PASSWORD=Booking@1234
+```
+
+4. **Build Docker images**
 ```bash
 docker compose build
 ```
 
----
-
-## Running the Project
-
-Start all services:
-
+5. **Start containers**
 ```bash
 docker compose up -d
 ```
 
-Check containers:
-
+6. **Wait for MySQL to be ready**
 ```bash
-docker compose ps
+docker compose exec -T db mysqladmin ping -uroot -prootpass --silent
 ```
 
-Your app should be accessible at:  
-[http://localhost:8000](http://localhost:8000)
-
----
-
-## Database Setup
-
-1. Run migrations:
-
+7. **Set permissions inside container**
 ```bash
-docker compose exec app php artisan migrate --force
+docker compose exec -T app chown -R www-data:www-data /var/www/html
+docker compose exec -T app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 ```
 
-2. Seed the database:
-
+8. **Install dependencies & run migrations**
 ```bash
-docker compose exec app php artisan db:seed --force
+docker compose exec -T app composer install --no-interaction --prefer-dist
+docker compose exec -T app php artisan key:generate --force
+docker compose exec -T app php artisan migrate --force
+docker compose exec -T app php artisan db:seed --force
+docker compose exec -T app php artisan config:cache
 ```
 
-3. Generate Laravel application key:
-
-```bash
-docker compose exec app php artisan key:generate --force
+9. **Access the app**
+```
+http://localhost:8000
 ```
 
 ---
 
-## Usage
+## 3. Jenkins Pipeline Setup
 
-- Register a new user.  
-- Access posts at `/posts`.  
-- Access admin panel if roles are configured.
+### Prerequisites
+- Jenkins installed
+- Git plugin
+- Docker installed on Jenkins node
+
+
+### Notes:
+- Make sure Jenkins has permissions to run Docker commands (`jenkins` user in `docker` group).
+- Consider cleaning workspace before each build to avoid `.git/config.lock` issues.
 
 ---
 
-## Troubleshooting
-
-**Permission Errors** (e.g., `file_put_contents(): failed to open stream`)  
-
-Run inside the container:
-
-```bash
-docker compose exec app bash
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-```
-
-**Database connection issues**  
-
-- Ensure MySQL container is running.
-- Check `.env` database credentials.
-# Containerization-Booking-Laravel-Project
-# Containerization-Booking-Laravel-Project
+## ✅ Summary
+- Run locally: PHP + MySQL + Composer
+- Run with Docker: Docker Compose up → setup `.env` → migrations
+- Jenkins Pipeline: Automates Docker build, deployment, and Laravel setup
